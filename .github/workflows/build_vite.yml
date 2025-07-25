@@ -42,8 +42,8 @@ jobs:
 
               openssl pkcs8 -in private_key.pem -topk8 -out encrypted_key.pem -passout env:KEY_PASSWORD
 
-              echo PRIVATE_KEY_PATH='encrypted_key.pem' > .env
-              echo PRIVATE_KEY_PASSWORD='env:KEY_PASSWORD' >> .env
+              echo PRIVATE_KEY_PATH=encrypted_key.pem > .env
+              echo PRIVATE_KEY_PASSWORD=env:KEY_PASSWORD >> .env
               
               cat .env
 
