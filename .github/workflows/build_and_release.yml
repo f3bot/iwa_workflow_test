@@ -138,9 +138,6 @@ jobs:
         with:
           name: webpack-template-artifact
 
-      - name: Display downloaded files
-        run: ls -R
-
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
