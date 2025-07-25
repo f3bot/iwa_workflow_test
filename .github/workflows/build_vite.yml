@@ -28,17 +28,11 @@ jobs:
               cd vite-iwa-template
               npm install
 
-          - name: Create .env file
-            run: |
-              cd vite-iwa-template
-              touch .env
-           
           - name: Generate private keys and populate .env
             env:
               KEY_PASSWORD: ${{secrets.KEY_PASSWORD}}
             run: |
               cd vite-iwa-template
-              cat .env >> output1.txt
               openssl genpkey -algorithm Ed25519 -out private_key.pem
 
               if [ -z "$KEY_PASSWORD" ]; then
@@ -49,9 +43,9 @@ jobs:
               openssl pkcs8 -in private_key.pem -topk8 -out encrypted_key.pem -passout env:KEY_PASSWORD
 
               echo PRIVATE_KEY_PATH='encrypted_key.pem' > .env
-              echo PRIVATE_KEY_PASSWORD='env:KEY_PASSWORD' > .env
+              echo PRIVATE_KEY_PASSWORD='env:KEY_PASSWORD' >> .env
               
-              cat .env >> output2.txt
+              cat .env
 
               rm private_key.pem
  
