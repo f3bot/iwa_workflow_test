@@ -1,0 +1,123 @@
+# This workflow builds and releases two separate Isolated Web App templates
+# (Vite and Webpack) when a new version tag (e.g., v1.0, v1.2.3) is pushed.
+name: "Build and Release IWA templates"
+
+on:
+  # Triggers the workflow on push events but only for version tags.
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build_vite:
+    name: Build Vite Template
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          cd vite-iwa-template
+          npm install
+
+      - name: Generate private keys and build
+        env:
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          cd vite-iwa-template
+          openssl genpkey -algorithm Ed25519 -out private_key.pem
+          if [ -z "$KEY_PASSWORD" ]; then
+            echo "KEY_PASSWORD Secret is not set."
+            exit 1
+          fi
+          openssl pkcs8 -in private_key.pem -topk8 -out encrypted_key.pem -passout env:KEY_PASSWORD
+          echo "PRIVATE_KEY_PATH=encrypted_key.pem" > .env
+          echo "PRIVATE_KEY_PASSWORD=$KEY_PASSWORD" >> .env
+          echo "NODE_ENV='production'" >> .env
+          rm private_key.pem
+          npm run build
+
+      - name: Zip project folder
+        run: zip -r vite-template.zip ./vite-iwa-template
+
+      - name: Upload Vite artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vite-template-artifact
+          path: vite-template.zip
+
+  build_webpack:
+    name: Build Webpack Template
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: |
+          cd webpack-iwa-template
+          npm install
+
+      - name: Generate private keys and build
+        env:
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          cd webpack-iwa-template
+          openssl genpkey -algorithm Ed25519 -out private_key.pem
+          if [ -z "$KEY_PASSWORD" ]; then
+            echo "KEY_PASSWORD Secret is not set."
+            exit 1
+          fi
+          openssl pkcs8 -in private_key.pem -topk8 -out encrypted_key.pem -passout env:KEY_PASSWORD
+          echo "PRIVATE_KEY_PATH=encrypted_key.pem" > .env
+          echo "PRIVATE_KEY_PASSWORD=$KEY_PASSWORD" >> .env
+          rm private_key.pem
+          npm run build
+
+      - name: Zip project folder
+        run: zip -r webpack-template.zip ./webpack-iwa-template
+
+      - name: Upload Webpack artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: webpack-template-artifact
+          path: webpack-template.zip
+
+  create_release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    # This job depends on both build jobs completing successfully
+    needs: [build_vite, build_webpack]
+    permissions:
+      contents: write
+    steps:
+      - name: Download Vite artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: vite-template-artifact
+
+      - name: Download Webpack artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: webpack-template-artifact
+
+      - name: Display downloaded files
+        run: ls -R
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "vite-template.zip,webpack-template.zip"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
