@@ -54,3 +54,20 @@ jobs:
             run: |
               cd vite-iwa-template
               npm run build
+
+    release_files:
+      name: Zip and release files
+      runs-on: ubuntu-latest
+      permissions:
+        contents: write
+      needs: build_swbn
+
+      steps: 
+        - name: Zip files
+          run: 
+            zip -r vite-template.zip ./vite-iwa-template
+        - name: Create release
+          uses: ncipollo/release-action@v1
+          with:
+            artifacts: "vite-template.zip"
+            token: ${{ secrets.GITHUB_TOKEN }}
