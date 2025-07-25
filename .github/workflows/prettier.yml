@@ -1,0 +1,25 @@
+name: 'Lint: Prettier'
+
+# This workflow runs on pushes to any branch 
+# and on any pull request 
+on:
+  [push, pull_request]
+
+jobs:
+  prettier-check:
+    name: Prettier format check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Prettier formatting check 
+        run: |
+          npm install --global prettier 
+          prettier --check . --config .prettierrc
