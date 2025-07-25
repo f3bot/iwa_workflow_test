@@ -1,8 +1,6 @@
-# This workflow builds templates on PRs and creates releases on manual trigger.
 name: "Build and Release IWA templates"
 
 on:
-  # Triggers build jobs on pull requests to the main branch for validation.
   pull_request:
     branches:
       - main
@@ -36,20 +34,29 @@ jobs:
       - name: Generate private keys and build
         run: |
           cd vite-iwa-template
-          KEY_PASSWORD=$RANDOM
-
+          # Generate a random password and export it for use in this step
+          export KEY_PASSWORD=$(openssl rand -base64 32)
+          
+          # Generate the private key
           openssl genpkey -algorithm Ed25519 -out private_key.pem
 
-          openssl pkcs8 -in private_key.pem -topk8 -out encrypted_key.pem -passout $KEY_PASSWORD
+          # Encrypt the private key using the generated password
+          openssl pkcs8 -in private_key.pem -topk8 -out encrypted_key.pem -passout env:KEY_PASSWORD
+          
+          # Create the .env file for the build process
           echo "PRIVATE_KEY_PATH=encrypted_key.pem" > .env
           echo "PRIVATE_KEY_PASSWORD=$KEY_PASSWORD" >> .env
           echo "NODE_ENV='production'" >> .env
+          
+          # Clean up the unencrypted key and run the build
           rm private_key.pem
           npm run build
 
-          rm -r node_modules
-          rm -r dist
-          rm -r encrypted_key.pem
+          # Clean up build artifacts before zipping
+          rm -rf node_modules
+          rm -rf dist
+          rm encrypted_key.pem
+          rm .env
 
       - name: Zip project folder
         run: (cd vite-iwa-template && zip -r ../vite-template.zip .)
@@ -80,20 +87,29 @@ jobs:
 
       - name: Generate private keys and build
         run: |
-          KEY_PASSWORD=$RANDOM
           cd webpack-iwa-template
+          # Generate a random password and export it for use in this step
+          export KEY_PASSWORD=$(openssl rand -base64 32)
 
+          # Generate the private key
           openssl genpkey -algorithm Ed25519 -out private_key.pem
-
-          openssl pkcs8 -in private_key.pem -topk8 -out encrypted_key.pem -passout $KEY_PASSWORD
+          
+          # Encrypt the private key using the generated password
+          openssl pkcs8 -in private_key.pem -topk8 -out encrypted_key.pem -passout env:KEY_PASSWORD
+          
+          # Create the .env file for the build process
           echo "PRIVATE_KEY_PATH=encrypted_key.pem" > .env
           echo "PRIVATE_KEY_PASSWORD=$KEY_PASSWORD" >> .env
+
+          # Clean up the unencrypted key and run the build
           rm private_key.pem
           npm run build
 
-          rm -r node_modules
-          rm -r dist
+          # Clean up build artifacts before zipping
+          rm -rf node_modules
+          rm -rf dist
           rm encrypted_key.pem
+          rm .env
 
       - name: Zip project folder content
         run: (cd webpack-iwa-template && zip -r ../webpack-template.zip .)
