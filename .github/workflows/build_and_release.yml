@@ -1,12 +1,19 @@
-# This workflow builds and releases two separate Isolated Web App templates
-# (Vite and Webpack) when a new version tag (e.g., v1.0, v1.2.3) is pushed.
+# This workflow builds templates on PRs and creates releases on manual trigger.
 name: "Build and Release IWA templates"
 
 on:
-  # Triggers the workflow on push events but only for version tags.
-  push:
-    tags:
-      - 'v*'
+  # Triggers build jobs on pull requests to the main branch for validation.
+  pull_request:
+    branches:
+      - main
+
+  # Allows manual triggering of the workflow to create a release.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.2.3)'
+        required: true
+        type: string
 
 jobs:
   build_vite:
@@ -42,6 +49,10 @@ jobs:
           echo "NODE_ENV='production'" >> .env
           rm private_key.pem
           npm run build
+
+          rm -r node_modules
+          rm -r dist
+          rm -r encrypted_key.pem
 
       - name: Zip project folder
         run: zip -r vite-template.zip ./vite-iwa-template
@@ -85,6 +96,10 @@ jobs:
           rm private_key.pem
           npm run build
 
+          rm -r node_modules
+          rm -r dist
+          rm encrypted_key.pem
+
       - name: Zip project folder
         run: zip -r webpack-template.zip ./webpack-iwa-template
 
@@ -96,8 +111,8 @@ jobs:
 
   create_release:
     name: Create GitHub Release
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    # This job depends on both build jobs completing successfully
     needs: [build_vite, build_webpack]
     permissions:
       contents: write
@@ -118,6 +133,8 @@ jobs:
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
+          # Use the version from the manual input for the tag and release name
+          tag: ${{ github.event.inputs.version }}
+          name: Release ${{ github.event.inputs.version }}
           artifacts: "vite-template.zip,webpack-template.zip"
           token: ${{ secrets.GITHUB_TOKEN }}
-
