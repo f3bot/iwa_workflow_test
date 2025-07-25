@@ -38,7 +38,7 @@ jobs:
               KEY_PASSWORD: ${{secrets.KEY_PASSWORD}}
             run: |
               cd vite-iwa-template
-              cat .env
+              cat .env >> output1.txt
               openssl genpkey -algorithm Ed25519 -out private_key.pem
 
               if [ -z "$KEY_PASSWORD" ]; then
@@ -51,7 +51,7 @@ jobs:
               echo PRIVATE_KEY_PATH='encrypted_key.pem' > .env
               echo PRIVATE_KEY_PASSWORD='env:KEY_PASSWORD' > .env
               
-              cat .env  
+              cat .env >> output2.txt
 
               rm private_key.pem
  
