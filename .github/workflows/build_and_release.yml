@@ -55,7 +55,8 @@ jobs:
           rm -r encrypted_key.pem
 
       - name: Zip project folder
-        run: zip -r vite-template.zip ./vite-iwa-template
+        run: (cd vite-iwa-template && zip -r ../vite-template.zip .)
+
 
       - name: Upload Vite artifact
         uses: actions/upload-artifact@v4
@@ -100,8 +101,8 @@ jobs:
           rm -r dist
           rm encrypted_key.pem
 
-      - name: Zip project folder
-        run: zip -r webpack-template.zip ./webpack-iwa-template
+      - name: Zip project folder content
+        run: (cd webpack-iwa-template && zip -r ../webpack-template.zip .)
 
       - name: Upload Webpack artifact
         uses: actions/upload-artifact@v4
