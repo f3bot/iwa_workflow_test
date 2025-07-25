@@ -21,7 +21,8 @@ jobs:
                 node-version: '20'
 
           # Install dependencies here since we need to use openssl and build in different commands
-
+          # We need to change directory on every run, because from my understaning, every command
+          # is a new shell
           - name: Install dependencies
             run: |
               cd vite-iwa-template
@@ -29,12 +30,14 @@ jobs:
 
           - name: Create .env file
             run: |
+              cd vite-iwa-template
               touch .env
            
           - name: Generate private keys and populate .env
             env:
               KEY_PASSWORD: ${{secrets.KEY_PASSWORD}}
             run: |
+              cd vite-iwa-template
               openssl genpkey -algorithm Ed25519 -out private_key.pem
 
               if [ -z "$KEY_PASSWORD" ]; then
@@ -52,4 +55,5 @@ jobs:
             
           - name: Build .swbn files
             run: |
+              cd vite-iwa-template
               npm run build
