@@ -34,16 +34,13 @@ jobs:
           npm install
 
       - name: Generate private keys and build
-        env:
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           cd vite-iwa-template
+          KEY_PASSWORD=$RANDOM
+
           openssl genpkey -algorithm Ed25519 -out private_key.pem
-          if [ -z "$KEY_PASSWORD" ]; then
-            echo "KEY_PASSWORD Secret is not set."
-            exit 1
-          fi
-          openssl pkcs8 -in private_key.pem -topk8 -out encrypted_key.pem -passout env:KEY_PASSWORD
+
+          openssl pkcs8 -in private_key.pem -topk8 -out encrypted_key.pem -passout $KEY_PASSWORD
           echo "PRIVATE_KEY_PATH=encrypted_key.pem" > .env
           echo "PRIVATE_KEY_PASSWORD=$KEY_PASSWORD" >> .env
           echo "NODE_ENV='production'" >> .env
@@ -82,16 +79,13 @@ jobs:
           npm install
 
       - name: Generate private keys and build
-        env:
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
+          KEY_PASSWORD=$RANDOM
           cd webpack-iwa-template
+
           openssl genpkey -algorithm Ed25519 -out private_key.pem
-          if [ -z "$KEY_PASSWORD" ]; then
-            echo "KEY_PASSWORD Secret is not set."
-            exit 1
-          fi
-          openssl pkcs8 -in private_key.pem -topk8 -out encrypted_key.pem -passout env:KEY_PASSWORD
+
+          openssl pkcs8 -in private_key.pem -topk8 -out encrypted_key.pem -passout $KEY_PASSWORD
           echo "PRIVATE_KEY_PATH=encrypted_key.pem" > .env
           echo "PRIVATE_KEY_PASSWORD=$KEY_PASSWORD" >> .env
           rm private_key.pem
