@@ -6,7 +6,7 @@ on:
 
 jobs: 
     build_swbn:
-        name: Build and release vite .swbn file
+        name: Build and release Vite .swbn file
         runs-on: ubuntu-latest
         permissions: 
             contents: write
