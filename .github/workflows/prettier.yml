@@ -22,4 +22,4 @@ jobs:
       - name: Run Prettier formatting check 
         run: |
           npm install --global prettier 
-          prettier --check . --config .prettierrc
+          prettier --check . --config .prettierrc --write
