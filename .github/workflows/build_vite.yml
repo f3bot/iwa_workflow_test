@@ -1,7 +1,6 @@
 name: "Build Vite .swbn file"
 on:
-    push:
-        tags: 'v*.*.*'
+    push
 
 
 jobs: 
